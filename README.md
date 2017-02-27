@@ -5,7 +5,7 @@ By default, it provides a round-robin strategy that will work in the majority of
 Visigoth allows you to customize the strategy for choosing the healthiest target
 by evaluating the statistics recorded by previous calls to the same target:
 
-```
+```javascript
 function rater(upstream) {
     var responseTime = upstream.meta$.stats.responseTime;
     if(typeof responseTime !== 'undefined') {
