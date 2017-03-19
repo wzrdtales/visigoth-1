@@ -1,7 +1,7 @@
 {
   "name": "visigoth",
   "version": "1.0.0",
-  "description": "",
+  "description": "A multipurpose load balancer with circuit breaker capabilities",
   "main": "visigoth.js",
   "scripts": {
     "test": "mocha tests.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rjrodger/visigoth.git"
+    "url": "https://github.com/dgonzalez/visigoth.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "David Gonzalez",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rjrodger/visigoth/issues"
+    "url": "https://github.com/dgonzalez/visigoth/issues"
   },
-  "homepage": "https://github.com/rjrodger/visigoth",
+  "homepage": "https://github.com/dgonzalez/visigoth",
   "dependencies": {
     "assertion-error": "^1.0.1",
     "async": "^2.0.0-rc.3",
