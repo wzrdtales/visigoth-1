@@ -1,0 +1,13 @@
+{
+  "name": "visigoth-econ-refused-example",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "econ-refused.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.1.5",
+    "request": "^2.79.0"
+  }
+}
