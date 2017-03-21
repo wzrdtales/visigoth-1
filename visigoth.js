@@ -88,7 +88,7 @@ function api_remove_by(callback) {
  */
 function api_choose_all(callback) {
     _(me.upstreams$).forEach(function(upstream, index) {
-        if (upstream.meta$.status != "CLOSED") {
+        if (upstream.meta$.status !== "CLOSED") {
             callback(upstream, index);
         }
     });
@@ -106,7 +106,7 @@ function api_choose(callback) {
 
     _(me.upstreams$).forEach(function(upstream, index) {
         // Re-closing if the timeout has expired;
-        if (upstream.meta$.status == 'OPEN') {
+        if (upstream.meta$.status === 'OPEN') {
             if ((Date.now() - upstream.meta$.statusTimestamp) > me.closingTimeout$) {
                 upstream.meta$.status = 'HALF-OPEN';
                 upstream.meta$.statusTimestamp = Date.now();
@@ -117,19 +117,19 @@ function api_choose(callback) {
             upstream.meta$.status = 'OPEN';
             upstream.meta$.statusTimestamp = Date.now();
         }
-        if (current > bestScore && upstream.meta$.status != "OPEN") {
+        if (current > bestScore && upstream.meta$.status !== "OPEN") {
             bestScore = current;
             bestNode = index;
         }
     });
-    
+
     if (bestScore > 0) {
         me.upstreams$[bestNode].meta$.lastChoosenTimestamp = Date.now();
         me.lastChoosenIndex$ = bestNode;
-        
+
         callback(null, me.upstreams$[bestNode].target, this.failureStrategy$(me.upstreams$[bestNode]), me.upstreams$[bestNode].meta$.stats);
         // Close the circuit once it has been successful
-        if (me.upstreams$[bestNode].meta$.status == "HALF-OPEN") {
+        if (me.upstreams$[bestNode].meta$.status === "HALF-OPEN") {
             me.upstreams$[bestNode].meta$.status = "CLOSED";
             me.upstreams$[bestNode].meta$.statusTimestamp = Date.now();
         }

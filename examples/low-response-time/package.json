@@ -5,7 +5,7 @@
   "private": true,
   "main": "low-latency.js",
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "async": "^2.1.5"
   }
