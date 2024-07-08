@@ -5,7 +5,16 @@
   "main": "visigoth.js",
   "scripts": {
     "test": "mocha tests.js",
-    "coverage": "istanbul cover node_modules/.bin/_mocha tests.js"
+    "coverage": "istanbul cover node_modules/.bin/_mocha tests.js",
+    "prepare": "husky",
+    "lintfix": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "pretty-quick --staged",
+      "git update-index",
+      "eslint --fix"
+    ]
   },
   "repository": {
     "type": "git",
@@ -35,6 +44,9 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",
     "eslint-plugin-standard": "^5.0.0",
-    "husky": "^9.0.11"
+    "husky": "^9.0.11",
+    "lint-staged": "^13.3.0",
+    "prettier": "^2.8.8",
+    "pretty-quick": "^3.1.3"
   }
 }
