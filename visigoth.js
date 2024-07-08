@@ -14,10 +14,9 @@ module.exports = function (options) {
     // By default, round robin.
     upstreamRater$: customRater || roundRobin,
     failureStrategy$: failureStrategy || defaultFailureHandler,
-    upstreams$: new BalanceLinkedRing(options.ringSize || 40),
+    upstreams$: new BalanceLinkedRing(options?.ringSize ?? 40),
     // 30 seconds by default
     closingTimeout$: closingTimeout || 30000,
-    lastChoosenIndex$: -1,
     add,
     remove,
     removeBy,
@@ -32,11 +31,7 @@ const _ = require('lodash');
  * Round Robin algorithm
  */
 function roundRobin (upstream, index, upstreams) {
-  if ((this.lastChoosenIndex$ + 1) % upstreams.length === index) {
-    return 10;
-  } else {
-    return 1;
-  }
+  return 1;
 }
 
 function defaultFailureHandler (node) {
@@ -50,7 +45,7 @@ function defaultFailureHandler (node) {
 /**
  * Adds one upstream to the list.
  */
-function add (target) {
+function add (target, score = 1) {
   const upstream = {};
   // Meta information about the upstream.
   upstream.meta$ = {};
@@ -60,7 +55,7 @@ function add (target) {
   upstream.meta$.statusTimestamp = Date.now();
   upstream.meta$.lastChoosenTimestamp = null;
   upstream.target = target;
-  this.upstreams$.push(upstream);
+  return this.upstreams$.addScore(score, upstream);
 }
 
 /**
@@ -68,9 +63,7 @@ function add (target) {
  */
 function remove (upstream) {
   const me = this;
-  me.upstreams$ = _.reject(me.upstreams$, function (e) {
-    return _.isEqual(e.target, upstream);
-  });
+  return me.upstreams$.removeElement(upstream);
 }
 
 /**
@@ -78,10 +71,10 @@ function remove (upstream) {
  * returns true if the node has to be removed.
  */
 function removeBy (callback) {
-  const me = this;
-  me.upstreams$ = _.reject(me.upstreams$, function (e) {
-    return callback(e.target);
-  });
+  // const me = this;
+  // me.upstreams$ = _.reject(me.upstreams$, function (e) {
+  //   return callback(e.target);
+  // });
 }
 
 /**
@@ -103,42 +96,52 @@ function chooseAll (callback) {
  */
 function choose (callback) {
   const me = this;
-  let bestNode = 0;
-  let bestScore = Number.MIN_SAFE_INTEGER;
 
-  _(me.upstreams$).forEach(function (upstream, index) {
-    // Re-closing if the timeout has expired;
-    if (upstream.meta$.status === 'OPEN') {
-      if (Date.now() - upstream.meta$.statusTimestamp > me.closingTimeout$) {
-        upstream.meta$.status = 'HALF-OPEN';
-        upstream.meta$.statusTimestamp = Date.now();
+  if (me.upstreams$.length === 0) {
+    return callback(new Error('no upstreams available'));
+  }
+
+  const start = me.upstreams$.getAndStep();
+  let upstream = start;
+  let con = false;
+  do {
+    if (upstream.u.meta$.status === 'OPEN') {
+      if (Date.now() - upstream.u.meta$.statusTimestamp > me.closingTimeout$) {
+        upstream.u.meta$.status = 'HALF-OPEN';
+        upstream.u.meta$.statusTimestamp = Date.now();
+      } else {
+        upstream = me.upstreams$.getAndStep();
+        continue;
       }
     }
-    const current = me.upstreamRater$(upstream, index, me.upstreams$);
-    if (current <= 0) {
-      upstream.meta$.status = 'OPEN';
-      upstream.meta$.statusTimestamp = Date.now();
-    }
-    if (current > bestScore && upstream.meta$.status !== 'OPEN') {
-      bestScore = current;
-      bestNode = index;
-    }
-  });
 
-  if (bestScore > 0) {
-    me.upstreams$[bestNode].meta$.lastChoosenTimestamp = Date.now();
-    me.lastChoosenIndex$ = bestNode;
+    const current = me.upstreamRater$(upstream, -1, me.upstreams$);
+    if (current <= 0) {
+      upstream.u.meta$.status = 'OPEN';
+      upstream.u.meta$.statusTimestamp = Date.now();
+    }
+
+    if (upstream.u.meta$.status !== 'OPEN') {
+      con = true;
+      break;
+    }
+
+    upstream = me.upstreams$.getAndStep();
+  } while (upstream !== start);
+
+  if (con) {
+    upstream.u.meta$.lastChoosenTimestamp = Date.now();
 
     callback(
       null,
-      me.upstreams$[bestNode].target,
-      this.failureStrategy$(me.upstreams$[bestNode]),
-      me.upstreams$[bestNode].meta$.stats
+      upstream.u.target,
+      this.failureStrategy$(upstream.u),
+      upstream.u.meta$.stats
     );
     // Close the circuit once it has been successful
-    if (me.upstreams$[bestNode].meta$.status === 'HALF-OPEN') {
-      me.upstreams$[bestNode].meta$.status = 'CLOSED';
-      me.upstreams$[bestNode].meta$.statusTimestamp = Date.now();
+    if (upstream.u.meta$.status === 'HALF-OPEN') {
+      upstream.u.meta$.status = 'CLOSED';
+      upstream.u.meta$.statusTimestamp = Date.now();
     }
   } else {
     callback(new Error('no upstreams available'));

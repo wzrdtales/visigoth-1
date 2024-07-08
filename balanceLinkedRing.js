@@ -60,15 +60,19 @@ module.exports = class BalanceLinkedRing {
     this.#size = size;
   }
 
-  addScore (score, e) {
-    const elem = Object.assign({}, e);
+  get length () {
+    return this.#length;
+  }
+
+  addScore (score, elem) {
+    const e = { u: Object.assign({}, elem) };
     e.score = score;
 
     if (this.#length === 0) {
       ++this.#length;
       this.#top = e;
       this.#it = this.#top;
-      return { code: 0, e: elem };
+      return { code: 0, e };
     }
 
     if (this.#length >= this.#size) {
@@ -81,7 +85,7 @@ module.exports = class BalanceLinkedRing {
       this.#top.before = e;
     } else {
       let c = this.#top;
-      while (c.next && (c = c.next).score > score);
+      while (c.next && (c = c.next).score >= score);
 
       if (c.next) {
         e.next = c.next;
@@ -95,14 +99,26 @@ module.exports = class BalanceLinkedRing {
   }
 
   // in this structure we always only move forward
-  getNext () {
+  getAndStep () {
+    const r = this.#it;
     if (this.#it.next) {
       this.#it = this.#it.next;
     } else {
       this.#it = this.#top;
     }
 
-    return this.#it;
+    return r;
+  }
+
+  getAll () {
+    let it = this.#top;
+
+    const res = [it];
+    while ((it = it.next)) {
+      res.push(it);
+    }
+
+    return it;
   }
 
   removeElement (e) {
@@ -130,6 +146,7 @@ module.exports = class BalanceLinkedRing {
         e.before.next = null;
       }
     }
+    return { code: 0 };
   }
 
   swap (e, x) {

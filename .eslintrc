@@ -4,6 +4,11 @@
     "sourceType": "module",
     "ecmaVersion": 13
   },
+  "env": {
+    "commonjs": true,
+    "node": true,
+    "mocha": true
+  },
   "root": true,
   "rules": {
     "semi": ["error", "always"],
