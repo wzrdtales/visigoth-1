@@ -1,8 +1,8 @@
 
 module.exports = function(options) {
-    var customRater = undefined;
-    var closingTimeout = undefined;
-    var failureStrategy = undefined;
+    let customRater = undefined;
+    let closingTimeout = undefined;
+    let failureStrategy = undefined;
     if (typeof options !== 'undefined') {
         customRater = options.customRater;
         closingTimeout = options.closingTimeout;
@@ -25,7 +25,7 @@ module.exports = function(options) {
     };
 }
 
-var _ = require("lodash");
+let _ = require("lodash");
 
 /**
  * Round Robin algorithm
@@ -50,7 +50,7 @@ function defaultFailureHandler(node) {
  * Adds one upstream to the list.
  */
 function api_add(target) {
-    var upstream = {};
+    let upstream = {};
     // Meta information about the upstream.
     upstream.meta$ = {};
     // Statistics about the upstream. Here is where the user pushes data.
@@ -66,7 +66,7 @@ function api_add(target) {
  * Removes one upstream from the list.
  */
 function api_remove(upstream) {
-    var me = this;
+    let me = this;
     me.upstreams$ = _.reject(me.upstreams$, function(e) {
         return _.isEqual(e.target, upstream);
     });
@@ -77,7 +77,7 @@ function api_remove(upstream) {
  * returns true if the node has to be removed.
  */
 function api_remove_by(callback) {
-    var me = this;
+    let me = this;
     me.upstreams$ = _.reject(me.upstreams$, function(e) {
         return callback(e.target);
     });
@@ -100,9 +100,9 @@ function api_choose_all(callback) {
  * over the upstreams and return the one with a higher score.
  */
 function api_choose(callback) {
-    var me = this;
-    var bestNode = 0;
-    var bestScore = Number.MIN_SAFE_INTEGER;
+    let me = this;
+    let bestNode = 0;
+    let bestScore = Number.MIN_SAFE_INTEGER;
 
     _(me.upstreams$).forEach(function(upstream, index) {
         // Re-closing if the timeout has expired;
@@ -112,7 +112,7 @@ function api_choose(callback) {
                 upstream.meta$.statusTimestamp = Date.now();
             }
         }
-        var current = me.upstreamRater$(upstream, index, me.upstreams$);
+        let current = me.upstreamRater$(upstream, index, me.upstreams$);
         if (current <= 0) {
             upstream.meta$.status = 'OPEN';
             upstream.meta$.statusTimestamp = Date.now();
