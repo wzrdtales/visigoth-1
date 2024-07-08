@@ -1,3 +1,5 @@
+const BalanceLinkedRing = require('./balanceLinkedRing.js');
+
 module.exports = function (options) {
   let customRater;
   let closingTimeout;
@@ -12,7 +14,7 @@ module.exports = function (options) {
     // By default, round robin.
     upstreamRater$: customRater || roundRobin,
     failureStrategy$: failureStrategy || defaultFailureHandler,
-    upstreams$: [],
+    upstreams$: new BalanceLinkedRing(options.ringSize || 40),
     // 30 seconds by default
     closingTimeout$: closingTimeout || 30000,
     lastChoosenIndex$: -1,
@@ -107,7 +109,7 @@ function choose (callback) {
   _(me.upstreams$).forEach(function (upstream, index) {
     // Re-closing if the timeout has expired;
     if (upstream.meta$.status === 'OPEN') {
-      if ((Date.now() - upstream.meta$.statusTimestamp) > me.closingTimeout$) {
+      if (Date.now() - upstream.meta$.statusTimestamp > me.closingTimeout$) {
         upstream.meta$.status = 'HALF-OPEN';
         upstream.meta$.statusTimestamp = Date.now();
       }
@@ -127,7 +129,12 @@ function choose (callback) {
     me.upstreams$[bestNode].meta$.lastChoosenTimestamp = Date.now();
     me.lastChoosenIndex$ = bestNode;
 
-    callback(null, me.upstreams$[bestNode].target, this.failureStrategy$(me.upstreams$[bestNode]), me.upstreams$[bestNode].meta$.stats);
+    callback(
+      null,
+      me.upstreams$[bestNode].target,
+      this.failureStrategy$(me.upstreams$[bestNode]),
+      me.upstreams$[bestNode].meta$.stats
+    );
     // Close the circuit once it has been successful
     if (me.upstreams$[bestNode].meta$.status === 'HALF-OPEN') {
       me.upstreams$[bestNode].meta$.status = 'CLOSED';
