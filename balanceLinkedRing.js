@@ -67,11 +67,14 @@ module.exports = class BalanceLinkedRing {
   addScore (score, elem) {
     const e = { u: Object.assign({}, elem) };
     e.score = score;
+    e.next = null;
+    e.before = null;
 
     if (this.#length === 0) {
       ++this.#length;
       this.#top = e;
       this.#it = this.#top;
+
       return { code: 0, e };
     }
 
@@ -90,6 +93,8 @@ module.exports = class BalanceLinkedRing {
       if (c.next) {
         e.next = c.next;
         c.next.before = e;
+      } else {
+        e.before = c;
       }
 
       c.next = e;
