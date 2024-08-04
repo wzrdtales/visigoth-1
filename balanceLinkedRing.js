@@ -154,6 +154,9 @@ module.exports = class BalanceLinkedRing {
         e.before.next = null;
       }
     }
+
+    e.before = null;
+    e.next = null;
     return { code: 0 };
   }
 
