@@ -118,7 +118,7 @@ module.exports = class BalanceLinkedRing {
       res.push(it);
     }
 
-    return it;
+    return res;
   }
 
   removeElement (e) {
