@@ -133,6 +133,8 @@ module.exports = class BalanceLinkedRing {
     if (this.#it === e) {
       if (e.next) {
         this.#it = e.next;
+      } else {
+        this.#it = this.#top;
       }
     }
 
