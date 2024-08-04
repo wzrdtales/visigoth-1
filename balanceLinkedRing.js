@@ -101,6 +101,7 @@ module.exports = class BalanceLinkedRing {
   // in this structure we always only move forward
   getAndStep () {
     const r = this.#it;
+
     if (this.#it.next) {
       this.#it = this.#it.next;
     } else {
@@ -123,6 +124,11 @@ module.exports = class BalanceLinkedRing {
 
   removeElement (e) {
     --this.#length;
+
+    if (this.#length === 0) {
+      this.#it = null;
+      this.#top = {};
+    }
 
     if (this.#it === e) {
       if (e.next) {
